@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <title>日常写真シェアアプリ</title>
+  <meta charset="UTF-8">
+  <style>
+    body {
+      background: linear-gradient(to bottom, #e3f2fd 0%, #bbdefb 100%);
+      font-family: 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif;
+      text-align: center;
+      margin: 0;
+      padding: 0;
+    }
+    .container {
+      margin: 60px auto;
+      max-width: 400px;
+      background: #fff;
+      border-radius: 16px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 32px 24px;
+    }
+    h1 {
+      font-size: 2em;
+      color: #1976d2;
+      margin-bottom: 0.5em;
+    }
+    p {
+      color: #333;
+      margin-bottom: 2em;
+    }
+    input[type="file"] {
+      margin-bottom: 1em;
+    }
+    #preview {
+      max-width: 100%;
+      border-radius: 8px;
+      margin-bottom: 1em;
+      display: none;
+    }
+    button {
+      background: #1976d2;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      padding: 10px 24px;
+      font-size: 1em;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1565c0;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>日常写真シェアアプリ</h1>
+    <p>一日一枚、あなたの日常を大切な人とシェアしよう。<br>
+    離れていても、近くにいても、写真でつながる。</p>
+    <label for="groupSelect">グループを選択：</label>
+<select id="groupSelect">
+  <option value="family">家族</option>
+  <option value="friends">友だち</option>
+  <option value="work">職場</option>
+  <option value="others">その他</option>
+</select>
+<br><br>
+    <input type="file" id="photoInput" accept="image/*">
+    <img id="preview">
+    <br>
+    <button id="shareBtn">写真をシェア</button>
+  </div>
+  <script>
+    // 写真プレビュー
+    document.getElementById('photoInput').onchange = function(e) {
+      const file = e.target.files[0];
+      const preview = document.getElementById('preview');
+      if (file) {
+        preview.src = URL.createObjectURL(file);
+        preview.style.display = 'block';
+      } else {
+        preview.src = '';
+        preview.style.display = 'none';
+      }
+    };
+    // シェアボタン（今はダミー）
+    document.getElementById('shareBtn').onclick = function() {
+  const group = document.getElementById('groupSelect').value;
+  alert('グループ「' + group + '」に写真をシェアしました！（実際の保存・共有機能はこれから追加できます）');
+};
+    
+  </script>
+</body>
+</html>
