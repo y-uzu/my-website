@@ -49,6 +49,18 @@
     button:hover {
       background: #1565c0;
     }
+    .stampBtn {
+      background: #e1f5fe;
+      border: 1px solid #81d4fa;
+      border-radius: 4px;
+      padding: 8px 16px;
+      font-size: 1em;
+      cursor: pointer;
+      margin: 0 4px;
+    }
+    .stampBtn:hover {
+      background: #b3e5fc;
+    }
   </style>
 </head>
 <body>
@@ -64,14 +76,23 @@
       <p id="groupUrlMsg"></p>
     </div>
 
-    <!-- グループ選択・写真投稿 -->
-    <div id="uploadSection" style="display:none;">
+    <!-- 状態記録・シェア -->
+    <div id="statusSection" style="display:none;">
       <label for="userName">あなたの名前：</label>
       <input type="text" id="userName" placeholder="名前を入力"><br><br>
-      <input type="file" id="photoInput" accept="image/*">
-      <img id="preview">
+      <div>
+        <span>今日の状態：</span>
+        <button class="stampBtn" data-stamp="😊">元気</button>
+        <button class="stampBtn" data-stamp="😐">ふつう</button>
+        <button class="stampBtn" data-stamp="😴">疲れ気味</button>
+        <button class="stampBtn" data-stamp="😷">体調不良</button>
+      </div>
+      <input type="hidden" id="selectedStamp">
       <br>
-      <button id="shareBtn">写真をシェア</button>
+      <textarea id="comment" rows="3" style="width:90%;" placeholder="一言コメント（任意）"></textarea>
+      <br>
+      <button id="shareStatusBtn">今日の状態をシェア</button>
+      <div id="sharedStatus"></div>
     </div>
   </div>
   <script>
@@ -96,32 +117,43 @@
       const group = getQueryParam('group');
       if (group) {
         document.getElementById('groupCreateSection').style.display = 'none';
-        document.getElementById('uploadSection').style.display = 'block';
+        document.getElementById('statusSection').style.display = 'block';
       }
     };
 
-    // 写真プレビュー
-    document.getElementById('photoInput').onchange = function(e) {
-      const file = e.target.files[0];
-      const preview = document.getElementById('preview');
-      if (file) {
-        preview.src = URL.createObjectURL(file);
-        preview.style.display = 'block';
-      } else {
-        preview.src = '';
-        preview.style.display = 'none';
-      }
-    };
+    // スタンプ選択
+    document.querySelectorAll('.stampBtn').forEach(btn => {
+      btn.onclick = function() {
+        document.getElementById('selectedStamp').value = btn.dataset.stamp;
+        document.querySelectorAll('.stampBtn').forEach(b => b.style.border = '');
+        btn.style.border = '2px solid #1976d2';
+      };
+    });
 
-    // シェアボタン（今はダミー）
-    document.getElementById('shareBtn').onclick = function() {
+    // 状態シェア
+    document.getElementById('shareStatusBtn').onclick = function() {
       const name = document.getElementById('userName').value.trim();
+      const stamp = document.getElementById('selectedStamp').value;
+      const comment = document.getElementById('comment').value.trim();
+      const group = getQueryParam('group');
       if (!name) {
         alert('名前を入力してください');
         return;
       }
-      const group = getQueryParam('group');
-      alert(name + 'さんがグループ「' + group + '」に写真をシェアしました！（実際の保存・共有機能はこれから追加できます）');
+      if (!stamp) {
+        alert('今日の状態スタンプを選んでください');
+        return;
+      }
+      // 表示（保存はまだ未実装）
+      const shared = document.createElement('div');
+      shared.style.marginTop = '1em';
+      shared.innerHTML = `<strong>${name}さん（${group}）の今日の状態：</strong> ${stamp}<br>${comment ? 'コメント: ' + comment : ''}`;
+      document.getElementById('sharedStatus').appendChild(shared);
+      // 入力欄リセット
+      document.getElementById('userName').value = '';
+      document.getElementById('selectedStamp').value = '';
+      document.getElementById('comment').value = '';
+      document.querySelectorAll('.stampBtn').forEach(b => b.style.border = '');
     };
   </script>
 </body>
