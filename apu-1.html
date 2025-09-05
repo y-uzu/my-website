@@ -56,20 +56,50 @@
     <h1>日常写真シェアアプリ</h1>
     <p>一日一枚、あなたの日常を大切な人とシェアしよう。<br>
     離れていても、近くにいても、写真でつながる。</p>
-    <label for="groupSelect">グループを選択：</label>
-<select id="groupSelect">
-  <option value="family">家族</option>
-  <option value="friends">友だち</option>
-  <option value="work">職場</option>
-  <option value="others">その他</option>
-</select>
-<br><br>
-    <input type="file" id="photoInput" accept="image/*">
-    <img id="preview">
-    <br>
-    <button id="shareBtn">写真をシェア</button>
+
+    <!-- グループ作成フォーム -->
+    <div id="groupCreateSection">
+      <input type="text" id="newGroupName" placeholder="グループ名を入力">
+      <button id="createGroupBtn">グループURLを発行</button>
+      <p id="groupUrlMsg"></p>
+    </div>
+
+    <!-- グループ選択・写真投稿 -->
+    <div id="uploadSection" style="display:none;">
+      <label for="userName">あなたの名前：</label>
+      <input type="text" id="userName" placeholder="名前を入力"><br><br>
+      <input type="file" id="photoInput" accept="image/*">
+      <img id="preview">
+      <br>
+      <button id="shareBtn">写真をシェア</button>
+    </div>
   </div>
   <script>
+    // グループURL生成
+    document.getElementById('createGroupBtn').onclick = function() {
+      const groupName = document.getElementById('newGroupName').value.trim();
+      if (!groupName) {
+        document.getElementById('groupUrlMsg').textContent = 'グループ名を入力してください。';
+        return;
+      }
+      // グループ名をURLの一部に（実際はID生成やDB保存が必要ですが今回は簡易版）
+      const url = location.origin + location.pathname + '?group=' + encodeURIComponent(groupName);
+      document.getElementById('groupUrlMsg').innerHTML = 'このURLをメンバーに送ってください：<br><a href="' + url + '">' + url + '</a>';
+    };
+
+    // ページ読み込み時、URLパラメータからグループ名取得
+    function getQueryParam(name) {
+      const params = new URLSearchParams(location.search);
+      return params.get(name);
+    }
+    window.onload = function() {
+      const group = getQueryParam('group');
+      if (group) {
+        document.getElementById('groupCreateSection').style.display = 'none';
+        document.getElementById('uploadSection').style.display = 'block';
+      }
+    };
+
     // 写真プレビュー
     document.getElementById('photoInput').onchange = function(e) {
       const file = e.target.files[0];
@@ -82,12 +112,17 @@
         preview.style.display = 'none';
       }
     };
+
     // シェアボタン（今はダミー）
     document.getElementById('shareBtn').onclick = function() {
-  const group = document.getElementById('groupSelect').value;
-  alert('グループ「' + group + '」に写真をシェアしました！（実際の保存・共有機能はこれから追加できます）');
-};
-    
+      const name = document.getElementById('userName').value.trim();
+      if (!name) {
+        alert('名前を入力してください');
+        return;
+      }
+      const group = getQueryParam('group');
+      alert(name + 'さんがグループ「' + group + '」に写真をシェアしました！（実際の保存・共有機能はこれから追加できます）');
+    };
   </script>
 </body>
 </html>
