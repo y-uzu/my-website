@@ -87,6 +87,9 @@
   <h1>🌱 こころの記録帳</h1>
 
   <section>
+    <h3>🗓️ カレンダー表示</h3>
+<div id="calendar-table"></div>
+
     <h2>🎯 やりたいこと記録</h2>
     <select id="goal-range">
       <option value="今月">今月</option>
@@ -138,6 +141,7 @@
       localStorage.setItem('goals', JSON.stringify(goals));
       document.getElementById('goal-text').value = '';
       renderGoals();
+      renderCalendar();
     }
 
     function toggleGoal(range, index) {
@@ -197,6 +201,7 @@
       localStorage.setItem('goodThings', JSON.stringify(goodThings));
       document.getElementById('good-thing').value = '';
       renderGoodDisplay();
+      renderCalendar();
     }
 
     function saveStamp(stamp) {
@@ -206,6 +211,7 @@
 
       localStorage.setItem('stamps', JSON.stringify(stamps));
       renderStampDisplay();
+      renderCalendar();
     }
 
     function renderGoodDisplay() {
@@ -231,6 +237,44 @@
     renderGoals();
     renderGoodDisplay();
     renderStampDisplay();
+    function renderCalendar() {
+  const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
+  const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+
+  const today = new Date();
+  const year = today.getFullYear();
+  const month = today.getMonth(); // 0-indexed
+
+  const firstDay = new Date(year, month, 1);
+  const lastDay = new Date(year, month + 1, 0);
+  const daysInMonth = lastDay.getDate();
+
+  let html = `<table style="width:100%; border-collapse: collapse;">`;
+  html += `<tr><th>日</th><th>月</th><th>火</th><th>水</th><th>木</th><th>金</th><th>土</th></tr><tr>`;
+
+  for (let i = 0; i < firstDay.getDay(); i++) {
+    html += `<td></td>`;
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const dateStr = `${year}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+    const good = goodThings[dateStr] || '';
+    const stamp = stamps[dateStr] || '';
+
+    html += `<td style="border:1px solid #ccc; padding:5px; vertical-align:top;">
+      <strong>${day}</strong><br>
+      ${stamp ? `気持ち: ${stamp}<br>` : ''}
+      ${good ? `良かった: ${good}` : ''}
+    </td>`;
+
+    if ((firstDay.getDay() + day) % 7 === 0) {
+      html += `</tr><tr>`;
+    }
+  }
+
+  html += `</tr></table>`;
+  document.getElementById('calendar-table').innerHTML = html;
+}
   </script>
 </body>
 </html>
