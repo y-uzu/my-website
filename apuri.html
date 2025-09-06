@@ -20,7 +20,7 @@
       padding: 15px;
       margin: 20px auto;
       border-radius: 8px;
-      max-width: 600px;
+      max-width: 700px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     textarea {
@@ -53,6 +53,27 @@
     #stamp-options button:hover {
       background: #ddd;
     }
+    .goal-item {
+      display: flex;
+      align-items: center;
+      margin-bottom: 5px;
+    }
+    .goal-item input[type="checkbox"] {
+      margin-right: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      border: 1px solid #ccc;
+      padding: 6px;
+      text-align: left;
+    }
+    th {
+      background-color: #e0f2f1;
+    }
   </style>
 </head>
 <body>
@@ -76,7 +97,7 @@
     <h2>🌞 今日の良かったこと</h2>
     <textarea id="good-thing" placeholder="今日の良かったことを記録しよう"></textarea>
     <button onclick="saveGoodThing()">保存</button>
-    <div id="good-list"></div>
+    <div id="good-calendar"></div>
   </section>
 
   <section>
@@ -88,7 +109,7 @@
       <button onclick="saveStamp('😠')">😠</button>
       <button onclick="saveStamp('😴')">😴</button>
     </div>
-    <div id="stamp-history"></div>
+    <div id="stamp-calendar"></div>
   </section>
 
   <script>
@@ -99,10 +120,17 @@
 
       const goals = JSON.parse(localStorage.getItem('goals') || '{}');
       if (!goals[range]) goals[range] = [];
-      goals[range].push(text);
+      goals[range].push({ text, done: false });
 
       localStorage.setItem('goals', JSON.stringify(goals));
       document.getElementById('goal-text').value = '';
+      renderGoals();
+    }
+
+    function toggleGoal(range, index) {
+      const goals = JSON.parse(localStorage.getItem('goals') || '{}');
+      goals[range][index].done = !goals[range][index].done;
+      localStorage.setItem('goals', JSON.stringify(goals));
       renderGoals();
     }
 
@@ -112,8 +140,26 @@
       container.innerHTML = '';
 
       for (const range in goals) {
-        const items = goals[range].map(item => `<li>${item}</li>`).join('');
-        container.innerHTML += `<h3>${range}</h3><ul>${items}</ul>`;
+        const doneList = goals[range].filter(g => g.done);
+        const todoList = goals[range].filter(g => !g.done);
+
+        container.innerHTML += `<h3>${range} - 未達成</h3>`;
+        todoList.forEach((g, i) => {
+          container.innerHTML += `
+            <div class="goal-item">
+              <input type="checkbox" onclick="toggleGoal('${range}', ${i})">
+              <span>${g.text}</span>
+            </div>`;
+        });
+
+        container.innerHTML += `<h3>${range} - 達成済み</h3>`;
+        doneList.forEach((g, i) => {
+          container.innerHTML += `
+            <div class="goal-item">
+              <input type="checkbox" checked onclick="toggleGoal('${range}', ${goals[range].indexOf(g)})">
+              <span style="text-decoration: line-through;">${g.text}</span>
+            </div>`;
+        });
       }
     }
 
@@ -127,17 +173,7 @@
 
       localStorage.setItem('goodThings', JSON.stringify(goodThings));
       document.getElementById('good-thing').value = '';
-      renderGoodThings();
-    }
-
-    function renderGoodThings() {
-      const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
-      const container = document.getElementById('good-list');
-      container.innerHTML = '';
-
-      for (const date in goodThings) {
-        container.innerHTML += `<p><strong>${date}</strong>: ${goodThings[date]}</p>`;
-      }
+      renderGoodCalendar();
     }
 
     function saveStamp(stamp) {
@@ -146,23 +182,37 @@
       stamps[today] = stamp;
 
       localStorage.setItem('stamps', JSON.stringify(stamps));
-      renderStamps();
+      renderStampCalendar();
     }
 
-    function renderStamps() {
-      const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
-      const container = document.getElementById('stamp-history');
-      container.innerHTML = '';
+    function renderGoodCalendar() {
+      const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
+      const container = document.getElementById('good-calendar');
+      container.innerHTML = '<h3>📅 良かったことカレンダー</h3><table><tr><th>日付</th><th>内容</th></tr>';
 
-      for (const date in stamps) {
-        container.innerHTML += `<p><strong>${date}</strong>: ${stamps[date]}</p>`;
-      }
+      const sortedDates = Object.keys(goodThings).sort().reverse();
+      sortedDates.forEach(date => {
+        container.innerHTML += `<tr><td>${date}</td><td>${goodThings[date]}</td></tr>`;
+      });
+      container.innerHTML += '</table>';
+    }
+
+    function renderStampCalendar() {
+      const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+      const container = document.getElementById('stamp-calendar');
+      container.innerHTML = '<h3>📅 気持ちスタンプカレンダー</h3><table><tr><th>日付</th><th>スタンプ</th></tr>';
+
+      const sortedDates = Object.keys(stamps).sort().reverse();
+      sortedDates.forEach(date => {
+        container.innerHTML += `<tr><td>${date}</td><td>${stamps[date]}</td></tr>`;
+      });
+      container.innerHTML += '</table>';
     }
 
     // 初期表示
     renderGoals();
-    renderGoodThings();
-    renderStamps();
+    renderGoodCalendar();
+    renderStampCalendar();
   </script>
 </body>
 </html>
