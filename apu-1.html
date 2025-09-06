@@ -1,216 +1,54 @@
-<!DOCTYPE html>
-<html lang="ja">
-<head>
-  <title>日常シェアアプリ</title>
-  <meta charset="UTF-8">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
-  <style>
-  
-    body {
-      background: linear-gradient(to bottom, #e3f2fd 0%, #bbdefb 100%);
-      font-family: 'Noto Sans JP', 'Yu Gothic', 'Meiryo', sans-serif;
-      text-align: center;
-      margin: 0;
-      padding: 0;
-    }
-    .container {
-      margin: 60px auto;
-      max-width: 400px;
-      background: #fff;
-      border-radius: 16px;
-      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-      padding: 32px 24px;
-    }
-    h1 {
-      font-size: 2em;
-      color: #1976d2;
-      margin-bottom: 0.5em;
-    }
-    p {
-      color: #333;
-      margin-bottom: 2em;
-    }
-    input[type="file"] {
-      margin-bottom: 1em;
-    }
-    #preview {
-      max-width: 100%;
-      border-radius: 8px;
-      margin-bottom: 1em;
-      display: none;
-    }
-    button {
-      background: #1976d2;
-      color: #fff;
-      border: none;
-      border-radius: 6px;
-      padding: 10px 24px;
-      font-size: 1em;
-      cursor: pointer;
-    }
-    button:hover {
-      background: #1565c0;
-    }
-    .stampBtn {
-      background: #e1f5fe;
-      border: 1px solid #81d4fa;
-      border-radius: 4px;
-      padding: 8px 16px;
-      font-size: 1em;
-      cursor: pointer;
-      margin: 0 4px;
-    }
-    .stampBtn:hover {
-      background: #b3e5fc;
-    }
-    #calendarSection {
-      margin-top: 2em;
-    }
-    .calendar-day {
-      border: 1px solid #90caf9;
-      border-radius: 8px;
-      margin: 8px 0;
-      padding: 8px;
-      background: #e3f2fd;
-    }
-    #todayStatus {
-      background: #fffde7;
-      border-radius: 8px;
-      padding: 16px;
-      margin-bottom: 1em;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.05);
-    }
-  </style>
-</head>
-<body>
-    <script type="module">
-      import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
-  // Import the functions you need from the SDKs you need
+<script type="module">
   import { initializeApp } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-app.js";
   import { getAnalytics } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-analytics.js";
-  // TODO: Add SDKs for Firebase products that you want to use
-  // https://firebase.google.com/docs/web/setup#available-libraries
+  import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
 
-  // Your web app's Firebase configuration
-  // For Firebase JS SDK v7.20.0 and later, measurementId is optional
   const firebaseConfig = {
     apiKey: "AIzaSyB7y2PzAQhynKBM3FaQ8oQ13Rh8Gau4Up0",
     authDomain: "kokorohourensou.firebaseapp.com",
     projectId: "kokorohourensou",
-    storageBucket: "kokorohourensou.firebasestorage.app",
+    storageBucket: "kokorohourensou.appspot.com",
     messagingSenderId: "153563519799",
     appId: "1:153563519799:web:c4f9a667f188d70994d8b2",
     measurementId: "G-VZ3EF0JW89"
   };
 
-  // Initialize Firebase
   const app = initializeApp(firebaseConfig);
   const analytics = getAnalytics(app);
-  import { getDatabase, ref, push, onValue } from "https://www.gstatic.com/firebasejs/12.2.1/firebase-database.js";
+  const database = getDatabase(app);
 
-const database = getDatabase(app);
-</script>
-  <div class="container">
-    <h1>今日の心ほうれん草</h1>
-    <div id="todayStatus"></div>
-    <p>あなたの日常をシェアしよう。
-    </p>
+  function getQueryParam(name) {
+    const params = new URLSearchParams(location.search);
+    return params.get(name);
+  }
 
-    <!-- グループ作成フォーム -->
-    <div id="groupCreateSection">
-      <input type="text" id="newGroupName" placeholder="グループ名を入力">
-      <button id="createGroupBtn">グループURLを発行</button>
-      <p id="groupUrlMsg"></p>
-    </div>
+  function getToday() {
+    const d = new Date();
+    return d.toISOString().slice(0, 10);
+  }
 
-    <!-- 状態記録・シェア -->
-    <div id="statusSection" style="display:none;">
-      <label for="userName">あなたの名前：</label>
-      <input type="text" id="userName" placeholder="名前を入力"><br><br>
-      <div>
-        <span>今日の状態：</span>
-        <button class="stampBtn" data-stamp="😊">元気</button>
-        <button class="stampBtn" data-stamp="😐">ふつう</button>
-        <button class="stampBtn" data-stamp="😴">疲れ気味</button>
-        <button class="stampBtn" data-stamp="😷">体調不良</button>
-      </div>
-      <input type="hidden" id="selectedStamp">
-      <br>
-      <textarea id="comment" rows="3" style="width:90%;" placeholder="一言コメント（任意）"></textarea>
-      <br>
-      <button id="shareStatusBtn">今日の状態をシェア</button>
-      <div id="sharedStatus"></div>
-    </div>
-
-    <!-- 追加: カレンダー表示用のライブラリ（flatpickr）を利用 -->
-    <div id="calendarSection" style="display:none;">
-      <h2>みんなの気持ちカレンダー</h2>
-      <input type="text" id="calendarPicker" placeholder="日付を選択">
-      <div id="calendarDays"></div>
-    </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
-  <script>
-    // グループURL生成
-    document.getElementById('createGroupBtn').onclick = function() {
-      const groupName = document.getElementById('newGroupName').value.trim();
-      if (!groupName) {
-        document.getElementById('groupUrlMsg').textContent = 'グループ名を入力してください。';
-        return;
-      }
-      // グループ名をURLの一部に（実際はID生成やDB保存が必要ですが今回は簡易版）
-      const url = location.origin + location.pathname + '?group=' + encodeURIComponent(groupName);
-      document.getElementById('groupUrlMsg').innerHTML = 'このURLをメンバーに送ってください：<br><a href="' + url + '">' + url + '</a>';
+  function saveStatus(group, date, name, stamp, comment) {
+    const statusRef = ref(database, `groups/${group}/statuses/${date}`);
+    const newStatus = {
+      name,
+      stamp,
+      comment,
+      timestamp: Date.now()
     };
+    push(statusRef, newStatus);
+  }
 
-    // 保存用（ローカルストレージを利用）
-    function saveStatus(group, date, name, stamp, comment) {
-      const key = `status_${group}_${date}`;
-      let arr = JSON.parse(localStorage.getItem(key) || '[]');
-      arr.push({ name, stamp, comment });
-      localStorage.setItem(key, JSON.stringify(arr));
-    }
+  function listenStatus(group, date, callback) {
+    const statusRef = ref(database, `groups/${group}/statuses/${date}`);
+    onValue(statusRef, snapshot => {
+      const data = snapshot.val();
+      const arr = data ? Object.values(data) : [];
+      callback(arr);
+    });
+  }
 
-    function getStatus(group, date) {
-      const key = `status_${group}_${date}`;
-      return JSON.parse(localStorage.getItem(key) || '[]');
-    }
-
-    // 今日の日付取得
-    function getToday() {
-      const d = new Date();
-      return d.toISOString().slice(0,10);
-    }
-
-    // 状態シェア
-    document.getElementById('shareStatusBtn').onclick = function() {
-      const name = document.getElementById('userName').value.trim();
-      const stamp = document.getElementById('selectedStamp').value;
-      const comment = document.getElementById('comment').value.trim();
-      const group = getQueryParam('group');
-      if (!name) {
-        alert('名前を入力してください');
-        return;
-      }
-      if (!stamp) {
-        alert('今日の状態スタンプを選んでください');
-        return;
-      }
-      const date = getToday();
-      saveStatus(group, date, name, stamp, comment);
-
-      showTodayStatus(group, date);
-
-      // 入力欄リセット
-      document.getElementById('userName').value = '';
-      document.getElementById('selectedStamp').value = '';
-      document.getElementById('comment').value = '';
-      document.querySelectorAll('.stampBtn').forEach(b => b.style.border = '');
-    };
-
-    // 今日の状態をトップに表示
-    function showTodayStatus(group, date) {
-      const arr = getStatus(group, date);
+  function showTodayStatus(group, date) {
+    listenStatus(group, date, arr => {
       if (arr.length === 0) {
         document.getElementById('todayStatus').innerHTML = 'まだ今日の気持ちは投稿されていません。';
         return;
@@ -220,11 +58,11 @@ const database = getDatabase(app);
         html += `<div><strong>${item.name}</strong>：${item.stamp} ${item.comment ? '（' + item.comment + '）' : ''}</div>`;
       });
       document.getElementById('todayStatus').innerHTML = html;
-    }
+    });
+  }
 
-    // カレンダー表示
-    function showCalendarStatus(group, date) {
-      const arr = getStatus(group, date);
+  function showCalendarStatus(group, date) {
+    listenStatus(group, date, arr => {
       const calendarDays = document.getElementById('calendarDays');
       calendarDays.innerHTML = '';
       if (arr.length === 0) {
@@ -237,44 +75,67 @@ const database = getDatabase(app);
         div.innerHTML = `<strong>${item.name}</strong>：${item.stamp} ${item.comment ? '（' + item.comment + '）' : ''}`;
         calendarDays.appendChild(div);
       });
-    }
-
-    // URLパラメータ取得
-    function getQueryParam(name) {
-      const params = new URLSearchParams(location.search);
-      return params.get(name);
-    }
-
-    // ページ読み込み時、URLパラメータからグループ名取得
-    window.onload = function() {
-      const group = getQueryParam('group');
-      if (group) {
-        document.getElementById('groupCreateSection').style.display = 'none';
-        document.getElementById('statusSection').style.display = 'block';
-        document.getElementById('calendarSection').style.display = 'block';
-        const today = getToday();
-        showTodayStatus(group, today);
-
-        // カレンダー初期化
-        flatpickr("#calendarPicker", {
-          dateFormat: "Y-m-d",
-          defaultDate: today,
-          onChange: function(selectedDates, dateStr) {
-            showCalendarStatus(group, dateStr);
-          }
-        });
-        showCalendarStatus(group, today);
-      }
-    };
-
-    // スタンプ選択
-    document.querySelectorAll('.stampBtn').forEach(btn => {
-      btn.onclick = function() {
-        document.getElementById('selectedStamp').value = btn.dataset.stamp;
-        document.querySelectorAll('.stampBtn').forEach(b => b.style.border = '');
-        btn.style.border = '2px solid #1976d2';
-      };
     });
-  </script>
-</body>
-</html>
+  }
+
+  document.getElementById('createGroupBtn').onclick = function () {
+    const groupName = document.getElementById('newGroupName').value.trim();
+    if (!groupName) {
+      document.getElementById('groupUrlMsg').textContent = 'グループ名を入力してください。';
+      return;
+    }
+    const url = location.origin + location.pathname + '?group=' + encodeURIComponent(groupName);
+    document.getElementById('groupUrlMsg').innerHTML = 'このURLをメンバーに送ってください：<br><a href="' + url + '">' + url + '</a>';
+  };
+
+  document.getElementById('shareStatusBtn').onclick = function () {
+    const name = document.getElementById('userName').value.trim();
+    const stamp = document.getElementById('selectedStamp').value;
+    const comment = document.getElementById('comment').value.trim();
+    const group = getQueryParam('group');
+    if (!name) {
+      alert('名前を入力してください');
+      return;
+    }
+    if (!stamp) {
+      alert('今日の状態スタンプを選んでください');
+      return;
+    }
+    const date = getToday();
+    saveStatus(group, date, name, stamp, comment);
+
+    // 入力欄リセット
+    document.getElementById('userName').value = '';
+    document.getElementById('selectedStamp').value = '';
+    document.getElementById('comment').value = '';
+    document.querySelectorAll('.stampBtn').forEach(b => b.style.border = '');
+  };
+
+  window.onload = function () {
+    const group = getQueryParam('group');
+    if (group) {
+      document.getElementById('groupCreateSection').style.display = 'none';
+      document.getElementById('statusSection').style.display = 'block';
+      document.getElementById('calendarSection').style.display = 'block';
+      const today = getToday();
+      showTodayStatus(group, today);
+
+      flatpickr("#calendarPicker", {
+        dateFormat: "Y-m-d",
+        defaultDate: today,
+        onChange: function (selectedDates, dateStr) {
+          showCalendarStatus(group, dateStr);
+        }
+      });
+      showCalendarStatus(group, today);
+    }
+  };
+
+  document.querySelectorAll('.stampBtn').forEach(btn => {
+    btn.onclick = function () {
+      document.getElementById('selectedStamp').value = btn.dataset.stamp;
+      document.querySelectorAll('.stampBtn').forEach(b => b.style.border = '');
+      btn.style.border = '2px solid #1976d2';
+    };
+  });
+</script>
