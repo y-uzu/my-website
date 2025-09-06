@@ -20,7 +20,7 @@
       padding: 15px;
       margin: 20px auto;
       border-radius: 8px;
-      max-width: 700px;
+      max-width: 800px;
       box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
     textarea {
@@ -53,6 +53,15 @@
     #stamp-options button:hover {
       background: #ddd;
     }
+    .goal-columns {
+      display: flex;
+      justify-content: space-between;
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .goal-column {
+      width: 48%;
+    }
     .goal-item {
       display: flex;
       align-items: center;
@@ -61,18 +70,14 @@
     .goal-item input[type="checkbox"] {
       margin-right: 10px;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
+    .calendar-input {
       margin-top: 10px;
     }
-    th, td {
-      border: 1px solid #ccc;
-      padding: 6px;
-      text-align: left;
-    }
-    th {
-      background-color: #e0f2f1;
+    .calendar-display {
+      margin-top: 10px;
+      background: #f0f0f0;
+      padding: 10px;
+      border-radius: 5px;
     }
   </style>
 </head>
@@ -94,14 +99,15 @@
   </section>
 
   <section>
-    <h2>🌞 今日の良かったこと</h2>
-    <textarea id="good-thing" placeholder="今日の良かったことを記録しよう"></textarea>
-    <button onclick="saveGoodThing()">保存</button>
-    <div id="good-calendar"></div>
-  </section>
+    <h2>📅 日付を選んで記録しよう</h2>
+    <input type="date" id="selected-date" class="calendar-input" />
 
-  <section>
-    <h2>😊 今日の気持ちスタンプ</h2>
+    <h3>🌞 良かったこと</h3>
+    <textarea id="good-thing" placeholder="この日の良かったことを記録しよう"></textarea>
+    <button onclick="saveGoodThing()">保存</button>
+    <div class="calendar-display" id="good-display"></div>
+
+    <h3>😊 気持ちスタンプ</h3>
     <div id="stamp-options">
       <button onclick="saveStamp('😊')">😊</button>
       <button onclick="saveStamp('😐')">😐</button>
@@ -109,10 +115,15 @@
       <button onclick="saveStamp('😠')">😠</button>
       <button onclick="saveStamp('😴')">😴</button>
     </div>
-    <div id="stamp-calendar"></div>
+    <div class="calendar-display" id="stamp-display"></div>
   </section>
 
   <script>
+    function getSelectedDate() {
+      const dateInput = document.getElementById('selected-date');
+      return dateInput.value || new Date().toISOString().split('T')[0];
+    }
+
     function saveGoal() {
       const range = document.getElementById('goal-range').value;
       const text = document.getElementById('goal-text').value;
@@ -143,76 +154,81 @@
         const doneList = goals[range].filter(g => g.done);
         const todoList = goals[range].filter(g => !g.done);
 
-        container.innerHTML += `<h3>${range} - 未達成</h3>`;
+        const left = document.createElement('div');
+        left.className = 'goal-column';
+        left.innerHTML = `<h3>${range} - 達成済み</h3>`;
+        doneList.forEach((g, i) => {
+          left.innerHTML += `
+            <div class="goal-item">
+              <input type="checkbox" checked onclick="toggleGoal('${range}', ${goals[range].indexOf(g)})">
+              <span style="text-decoration: line-through;">${g.text}</span>
+            </div>`;
+        });
+
+        const right = document.createElement('div');
+        right.className = 'goal-column';
+        right.innerHTML = `<h3>${range} - 未達成</h3>`;
         todoList.forEach((g, i) => {
-          container.innerHTML += `
+          right.innerHTML += `
             <div class="goal-item">
               <input type="checkbox" onclick="toggleGoal('${range}', ${i})">
               <span>${g.text}</span>
             </div>`;
         });
 
-        container.innerHTML += `<h3>${range} - 達成済み</h3>`;
-        doneList.forEach((g, i) => {
-          container.innerHTML += `
-            <div class="goal-item">
-              <input type="checkbox" checked onclick="toggleGoal('${range}', ${goals[range].indexOf(g)})">
-              <span style="text-decoration: line-through;">${g.text}</span>
-            </div>`;
-        });
+        const row = document.createElement('div');
+        row.className = 'goal-columns';
+        row.appendChild(left);
+        row.appendChild(right);
+        container.appendChild(row);
       }
     }
 
     function saveGoodThing() {
+      const date = getSelectedDate();
       const text = document.getElementById('good-thing').value;
       if (!text) return;
 
-      const today = new Date().toISOString().split('T')[0];
       const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
-      goodThings[today] = text;
+      goodThings[date] = text;
 
       localStorage.setItem('goodThings', JSON.stringify(goodThings));
       document.getElementById('good-thing').value = '';
-      renderGoodCalendar();
+      renderGoodDisplay();
     }
 
     function saveStamp(stamp) {
-      const today = new Date().toISOString().split('T')[0];
+      const date = getSelectedDate();
       const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
-      stamps[today] = stamp;
+      stamps[date] = stamp;
 
       localStorage.setItem('stamps', JSON.stringify(stamps));
-      renderStampCalendar();
+      renderStampDisplay();
     }
 
-    function renderGoodCalendar() {
+    function renderGoodDisplay() {
+      const date = getSelectedDate();
       const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
-      const container = document.getElementById('good-calendar');
-      container.innerHTML = '<h3>📅 良かったことカレンダー</h3><table><tr><th>日付</th><th>内容</th></tr>';
-
-      const sortedDates = Object.keys(goodThings).sort().reverse();
-      sortedDates.forEach(date => {
-        container.innerHTML += `<tr><td>${date}</td><td>${goodThings[date]}</td></tr>`;
-      });
-      container.innerHTML += '</table>';
+      const container = document.getElementById('good-display');
+      container.innerHTML = goodThings[date] ? `✅ ${date} の記録：${goodThings[date]}` : '（まだ記録がありません）';
     }
 
-    function renderStampCalendar() {
+    function renderStampDisplay() {
+      const date = getSelectedDate();
       const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
-      const container = document.getElementById('stamp-calendar');
-      container.innerHTML = '<h3>📅 気持ちスタンプカレンダー</h3><table><tr><th>日付</th><th>スタンプ</th></tr>';
-
-      const sortedDates = Object.keys(stamps).sort().reverse();
-      sortedDates.forEach(date => {
-        container.innerHTML += `<tr><td>${date}</td><td>${stamps[date]}</td></tr>`;
-      });
-      container.innerHTML += '</table>';
+      const container = document.getElementById('stamp-display');
+      container.innerHTML = stamps[date] ? `📝 ${date} の気持ち：${stamps[date]}` : '（まだスタンプがありません）';
     }
 
-    // 初期表示
+    document.getElementById('selected-date').addEventListener('change', () => {
+      renderGoodDisplay();
+      renderStampDisplay();
+    });
+
+    document.getElementById('selected-date').value = new Date().toISOString().split('T')[0];
     renderGoals();
-    renderGoodCalendar();
-    renderStampCalendar();
+    renderGoodDisplay();
+    renderStampDisplay();
   </script>
 </body>
 </html>
