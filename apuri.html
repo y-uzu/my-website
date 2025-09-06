@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>こころの記録帳</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f5f5f5;
+      padding: 20px;
+      color: #333;
+    }
+    h1 {
+      text-align: center;
+      color: #4caf50;
+    }
+    section {
+      background: white;
+      padding: 15px;
+      margin: 20px auto;
+      border-radius: 8px;
+      max-width: 600px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    }
+    textarea {
+      width: 100%;
+      height: 80px;
+      margin-top: 10px;
+      padding: 10px;
+      font-size: 1em;
+      border-radius: 5px;
+      border: 1px solid #ccc;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 16px;
+      background: #4caf50;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #45a049;
+    }
+    #stamp-options button {
+      font-size: 1.5em;
+      margin: 5px;
+      background: #eee;
+      color: #333;
+    }
+    #stamp-options button:hover {
+      background: #ddd;
+    }
+  </style>
+</head>
+<body>
+  <h1>🌱 こころの記録帳</h1>
+
+  <section>
+    <h2>🎯 やりたいこと記録</h2>
+    <select id="goal-range">
+      <option value="今月">今月</option>
+      <option value="今年">今年</option>
+      <option value="3年後">3年後</option>
+      <option value="5年後">5年後</option>
+      <option value="○○歳まで">○○歳まで</option>
+    </select>
+    <textarea id="goal-text" placeholder="やりたいことを書いてください..."></textarea>
+    <button onclick="saveGoal()">保存</button>
+    <div id="goal-list"></div>
+  </section>
+
+  <section>
+    <h2>🌞 今日の良かったこと</h2>
+    <textarea id="good-thing" placeholder="今日の良かったことを記録しよう"></textarea>
+    <button onclick="saveGoodThing()">保存</button>
+    <div id="good-list"></div>
+  </section>
+
+  <section>
+    <h2>😊 今日の気持ちスタンプ</h2>
+    <div id="stamp-options">
+      <button onclick="saveStamp('😊')">😊</button>
+      <button onclick="saveStamp('😐')">😐</button>
+      <button onclick="saveStamp('😢')">😢</button>
+      <button onclick="saveStamp('😠')">😠</button>
+      <button onclick="saveStamp('😴')">😴</button>
+    </div>
+    <div id="stamp-history"></div>
+  </section>
+
+  <script>
+    function saveGoal() {
+      const range = document.getElementById('goal-range').value;
+      const text = document.getElementById('goal-text').value;
+      if (!text) return;
+
+      const goals = JSON.parse(localStorage.getItem('goals') || '{}');
+      if (!goals[range]) goals[range] = [];
+      goals[range].push(text);
+
+      localStorage.setItem('goals', JSON.stringify(goals));
+      document.getElementById('goal-text').value = '';
+      renderGoals();
+    }
+
+    function renderGoals() {
+      const goals = JSON.parse(localStorage.getItem('goals') || '{}');
+      const container = document.getElementById('goal-list');
+      container.innerHTML = '';
+
+      for (const range in goals) {
+        const items = goals[range].map(item => `<li>${item}</li>`).join('');
+        container.innerHTML += `<h3>${range}</h3><ul>${items}</ul>`;
+      }
+    }
+
+    function saveGoodThing() {
+      const text = document.getElementById('good-thing').value;
+      if (!text) return;
+
+      const today = new Date().toISOString().split('T')[0];
+      const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
+      goodThings[today] = text;
+
+      localStorage.setItem('goodThings', JSON.stringify(goodThings));
+      document.getElementById('good-thing').value = '';
+      renderGoodThings();
+    }
+
+    function renderGoodThings() {
+      const goodThings = JSON.parse(localStorage.getItem('goodThings') || '{}');
+      const container = document.getElementById('good-list');
+      container.innerHTML = '';
+
+      for (const date in goodThings) {
+        container.innerHTML += `<p><strong>${date}</strong>: ${goodThings[date]}</p>`;
+      }
+    }
+
+    function saveStamp(stamp) {
+      const today = new Date().toISOString().split('T')[0];
+      const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+      stamps[today] = stamp;
+
+      localStorage.setItem('stamps', JSON.stringify(stamps));
+      renderStamps();
+    }
+
+    function renderStamps() {
+      const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+      const container = document.getElementById('stamp-history');
+      container.innerHTML = '';
+
+      for (const date in stamps) {
+        container.innerHTML += `<p><strong>${date}</strong>: ${stamps[date]}</p>`;
+      }
+    }
+
+    // 初期表示
+    renderGoals();
+    renderGoodThings();
+    renderStamps();
+  </script>
+</body>
+</html>
