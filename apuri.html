@@ -1,6 +1,7 @@
 <!DOCTYPE html>
 <html lang="ja">
 <head>
+    
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>こころの記録帳</title>
@@ -82,6 +83,7 @@
       border-radius: 5px;
     }
   </style>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
   <h1>🌱 こころの記録帳</h1>
@@ -101,6 +103,8 @@
     <textarea id="goal-text" placeholder="やりたいことを書いてください..."></textarea>
     <button onclick="saveGoal()">保存</button>
     <div id="goal-list"></div>
+    <h3>📈 気持ちの傾向グラフ</h3>
+<canvas id="moodChart" width="400" height="200"></canvas>
   </section>
 
   <section>
@@ -141,6 +145,9 @@
       localStorage.setItem('goals', JSON.stringify(goals));
       document.getElementById('goal-text').value = '';
       renderGoals();
+      renderMoodChart();
+- 
+
       renderCalendar();
     }
 
@@ -212,6 +219,8 @@
       localStorage.setItem('stamps', JSON.stringify(stamps));
       renderStampDisplay();
       renderCalendar();
+      renderMoodChart();
+
     }
 
     function renderGoodDisplay() {
@@ -275,6 +284,41 @@
   html += `</tr></table>`;
   document.getElementById('calendar-table').innerHTML = html;
 }
-  </script>
+function renderMoodChart() {
+  const stamps = JSON.parse(localStorage.getItem('stamps') || '{}');
+  const moodCounts = { '😊': 0, '😐': 0, '😢': 0, '😠': 0, '😴': 0 };
+
+  for (const date in stamps) {
+    const mood = stamps[date];
+    if (moodCounts[mood] !== undefined) {
+      moodCounts[mood]++;
+    }
+  }
+
+  const ctx = document.getElementById('moodChart').getContext('2d');
+  new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: Object.keys(moodCounts),
+      datasets: [{
+        label: '気持ちの回数',
+        data: Object.values(moodCounts),
+        backgroundColor: '#f48fb1'
+      }]
+    },
+    options: {
+      responsive: true,
+      scales: {
+        y: {
+          beginAtZero: true,
+          ticks: {
+            stepSize: 1
+          }
+        }
+      }
+    }
+  });
+}
+</script>
 </body>
 </html>
