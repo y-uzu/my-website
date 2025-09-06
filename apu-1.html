@@ -4,6 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>こころほうれん草</title>
+  <meta http-equiv="Cache-Control" content="max-age=180">
+  <meta http-equiv="X-Content-Type-Options" content="nosniff">
   <style>
     body {
       font-family: 'Noto Sans JP', sans-serif;
@@ -29,18 +31,40 @@
       padding: 10px;
       border-radius: 8px;
     }
+    input, textarea {
+      margin: 8px 0;
+      padding: 8px;
+      width: 90%;
+      max-width: 400px;
+      box-sizing: border-box;
+      -webkit-box-sizing: border-box;
+      -moz-box-sizing: border-box;
+    }
+    button {
+      margin-top: 10px;
+      padding: 10px 20px;
+      background: #1976d2;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #1565c0;
+    }
   </style>
 </head>
 <body>
   <h1>こころほうれん草</h1>
+
   <div id="groupCreateSection">
-    <input type="text" id="newGroupName" placeholder="グループ名を入力">
+    <input type="text" id="newGroupName" placeholder="グループ名を入力" autocomplete="organization">
     <button id="createGroupBtn">グループURLを発行</button>
     <p id="groupUrlMsg"></p>
   </div>
 
   <div id="statusSection" style="display:none;">
-    <input type="text" id="userName" placeholder="あなたの名前"><br><br>
+    <input type="text" id="userName" placeholder="あなたの名前" autocomplete="name"><br>
     <div>
       <button class="stampBtn" data-stamp="😊">元気</button>
       <button class="stampBtn" data-stamp="😐">ふつう</button>
@@ -48,8 +72,7 @@
       <button class="stampBtn" data-stamp="😷">体調不良</button>
     </div>
     <input type="hidden" id="selectedStamp">
-    <br>
-    <textarea id="comment" rows="3" style="width:90%;" placeholder="一言コメント（任意）"></textarea><br>
+    <textarea id="comment" rows="3" placeholder="一言コメント（任意）"></textarea><br>
     <button id="shareStatusBtn">今日の気持ちをシェア</button>
     <div id="todayStatus"></div>
   </div>
@@ -119,7 +142,7 @@
         const name = document.getElementById('userName').value.trim();
         const stamp = document.getElementById('selectedStamp').value;
         const comment = document.getElementById('comment').value.trim();
-        if (!name || !stamp) return alert('名前とスタンプを選んでください');
+        if (!name || !stamp || !group) return alert('名前とスタンプを選んでください');
         saveStatus(group, getToday(), name, stamp, comment);
         document.getElementById('userName').value = '';
         document.getElementById('selectedStamp').value = '';
